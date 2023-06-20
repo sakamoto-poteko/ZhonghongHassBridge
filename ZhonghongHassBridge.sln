@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Common\Common.csproj", "{C16CCA89-FF08-47C1-AB67-2138E9B12158}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BridgeService", "BridgeService\BridgeService.csproj", "{FE370552-C085-4908-A157-64D36F33BB2F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C16CCA89-FF08-47C1-AB67-2138E9B12158}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C16CCA89-FF08-47C1-AB67-2138E9B12158}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C16CCA89-FF08-47C1-AB67-2138E9B12158}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C16CCA89-FF08-47C1-AB67-2138E9B12158}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FE370552-C085-4908-A157-64D36F33BB2F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE370552-C085-4908-A157-64D36F33BB2F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE370552-C085-4908-A157-64D36F33BB2F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE370552-C085-4908-A157-64D36F33BB2F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
