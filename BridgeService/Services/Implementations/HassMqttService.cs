@@ -122,11 +122,14 @@ public partial class HassMqttService : IHostedService
         {
             try
             {
+                _logger.LogDebug("Connecting mqtt...");
                 await ConnectHassMqttAsync();
                 _logger.LogInformation("Hass MQTT subscriber connected");
                 // wait until reconnecting signal
                 // if failed connecting, exception will be thrown hence no wait
+                _logger.LogDebug("Wait for reconnecting signal...");
                 _reconnectMqttSignal.WaitOne();
+                _logger.LogDebug("Reconnecting signal received. Disconnecting...");
                 await DisconnectHassMqttAsync();
             }
             catch (Exception ex) when(ex is MqttConnectingFailedException or SocketException)
@@ -175,11 +178,11 @@ public partial class HassMqttService : IHostedService
             }
             catch (ZhongHongException e)
             {
-                _logger.LogError(e, "zhonghong failure");
+                _logger.LogError(e, "ZhongHong failure occured in pulling task");
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "general failure");
+                _logger.LogError(e, "A general failure occured in pulling task");
             }
 
             // TODO: configurable delay. minimum 500
@@ -191,6 +194,7 @@ public partial class HassMqttService : IHostedService
     {
         // this method is for the sake of completeness. who the hell would stop it? 
         var tasks = new List<Task>();
+        _logger.LogDebug("Stopping HassMqttService...");
         if (_zhonghongVrfPullerTask != null)
         {
             tasks.Add(_zhonghongVrfPullerTask);
@@ -201,7 +205,9 @@ public partial class HassMqttService : IHostedService
         }
 
         await Task.WhenAll(tasks);
+        _logger.LogDebug("Tasks stopped. Disconnecting mqtt...");
         await DisconnectHassMqttAsync();
+        _logger.LogDebug("HassMqttService stopped");
     }
 
     #endregion
