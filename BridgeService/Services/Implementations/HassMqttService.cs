@@ -57,8 +57,10 @@ public partial class HassMqttService : IHostedService
                     .WithTopicFilter(f => { f.WithTopic("homeassistant/climate/zhonghong_br/+/fan_mode/set"); })
                     .WithTopicFilter(f => { f.WithTopic("homeassistant/climate/zhonghong_br/+/temp/set"); })
                     .Build();
+
                 var mqttClientOptionsBuilder = new MqttClientOptionsBuilder()
                     .WithTcpServer(_mqttSettings.Broker);
+
                 if (_mqttSettings.HasCredential)
                 {
                     mqttClientOptionsBuilder =
@@ -71,7 +73,7 @@ public partial class HassMqttService : IHostedService
                 mqttClient.ApplicationMessageReceivedAsync += MqttClientOnApplicationMessageReceivedAsync;
                 mqttClient.DisconnectedAsync += MqttClientOnDisconnectedAsync;
                 await mqttClient.SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
-            
+
                 _mqttClient = mqttClient;
                 // decrease semaphore to hold off reconnecting
             }
@@ -84,7 +86,6 @@ public partial class HassMqttService : IHostedService
         {
             // post the semaphore when there's an exception so it can proceed with reconnecting
         }
-     
     }
 
     private async Task DisconnectHassMqttAsync()
@@ -122,14 +123,17 @@ public partial class HassMqttService : IHostedService
         {
             try
             {
+                _logger.LogDebug("Connecting mqtt...");
                 await ConnectHassMqttAsync();
                 _logger.LogInformation("Hass MQTT subscriber connected");
                 // wait until reconnecting signal
                 // if failed connecting, exception will be thrown hence no wait
-                _reconnectMqttSignal.WaitOne();
+                _logger.LogDebug("Wait for reconnecting signal...");
+                WaitHandle.WaitAny(new[] { _reconnectMqttSignal, cancellationToken.WaitHandle });
+                _logger.LogDebug("Reconnecting signal received. Disconnecting...");
                 await DisconnectHassMqttAsync();
             }
-            catch (Exception ex) when(ex is MqttConnectingFailedException or SocketException)
+            catch (Exception ex) when (ex is MqttConnectingFailedException or SocketException)
             {
                 _logger.LogError("Failed to connecting MQTT: {ErrorMessage}", ex.Message);
             }
@@ -139,7 +143,10 @@ public partial class HassMqttService : IHostedService
             }
 
             // TODO: configurable delay
-            await Task.Delay(TimeSpan.FromMilliseconds(3000), cancellationToken);
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(3000), cancellationToken);
+            }
         }
     }
 
@@ -175,33 +182,47 @@ public partial class HassMqttService : IHostedService
             }
             catch (ZhongHongException e)
             {
-                _logger.LogError(e, "zhonghong failure");
+                _logger.LogError(e, "ZhongHong failure occured in pulling task");
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "general failure");
+                _logger.LogError(e, "A general failure occured in pulling task");
             }
 
             // TODO: configurable delay. minimum 500
-            await Task.Delay(TimeSpan.FromMilliseconds(1000), cancellationToken);
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(1000), cancellationToken);
+            }
         }
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)
     {
-        // this method is for the sake of completeness. who the hell would stop it? 
-        var tasks = new List<Task>();
-        if (_zhonghongVrfPullerTask != null)
+        try
         {
-            tasks.Add(_zhonghongVrfPullerTask);
-        }
-        if (_mqttConnectionMaintainerTask != null)
-        {
-            tasks.Add(_mqttConnectionMaintainerTask);
-        }
+            // this method is for the sake of completeness. who the hell would stop it? 
+            var tasks = new List<Task>();
+            _logger.LogDebug("Stopping HassMqttService...");
+            if (_zhonghongVrfPullerTask != null)
+            {
+                tasks.Add(_zhonghongVrfPullerTask);
+            }
 
-        await Task.WhenAll(tasks);
-        await DisconnectHassMqttAsync();
+            if (_mqttConnectionMaintainerTask != null)
+            {
+                tasks.Add(_mqttConnectionMaintainerTask);
+            }
+
+            await Task.WhenAll(tasks);
+            _logger.LogDebug("Tasks stopped. Disconnecting mqtt...");
+            await DisconnectHassMqttAsync();
+            _logger.LogDebug("HassMqttService stopped");
+        }
+        catch (TaskCanceledException e)
+        {
+            _logger.LogDebug("Task cancelled: {Error}", e.ToString());
+        }
     }
 
     #endregion

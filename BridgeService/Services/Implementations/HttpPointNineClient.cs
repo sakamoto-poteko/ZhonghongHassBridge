@@ -9,7 +9,7 @@ public class HttpPointNineClient : IHttpPointNineClient
 {
     private readonly ILogger<HttpPointNineClient> _logger;
 
-    private const string HTTP_0_9_HEADERS = "GET <<<URI>>> HTTP/0.9\r\n" +
+    private const string Http0dot9Headers = "GET <<<URI>>> HTTP/0.9\r\n" +
                                             "Host: <<<HOST>>>\r\n" +
                                             "Authorization: Basic <<<AUTH>>>\r\n" +
                                             "User-Agent: suck-0.9\r\n" +
@@ -22,7 +22,7 @@ public class HttpPointNineClient : IHttpPointNineClient
     
     public async Task<string> GetAsync(Uri uri, string auth)
     {
-        string header = HTTP_0_9_HEADERS
+        string header = Http0dot9Headers
             .Replace("<<<URI>>>", uri.PathAndQuery)
             .Replace("<<<HOST>>>", uri.Host)
             .Replace("<<<AUTH>>>", auth);
@@ -42,7 +42,14 @@ public class HttpPointNineClient : IHttpPointNineClient
                 responseBuilder.Append(data);
             } while (netStream.DataAvailable);
 
-            return responseBuilder.ToString();
+            var response = responseBuilder.ToString();
+            if (response.StartsWith("HTTP/")) // this is an HTTP status message
+            {
+                var lines = response.Split("\r\n");
+                throw new ZhongHongException($"HTTP error: {lines.First()}");
+            }
+
+            return response;
         }
         catch (Exception ex) when (ex is IOException or SocketException)
         {
