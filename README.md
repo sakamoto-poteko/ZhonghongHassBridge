@@ -29,5 +29,5 @@ docker run -it --env-file=env ghcr.io/sakamoto-poteko/zhonghonghassbridge
 ```
 or as in production:
 ```shell
-docker run -d --restart unless-stopped --env-file=env ghcr.io/sakamoto-poteko/zhonghonghassbridge
+docker run -d --restart unless-stopped --env-file=zhonghong-bridge-env --name zhonghong-hass-bridge ghcr.io/sakamoto-poteko/zhonghonghassbridge
 ```
