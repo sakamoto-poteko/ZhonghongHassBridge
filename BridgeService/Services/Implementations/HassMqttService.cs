@@ -100,7 +100,7 @@ public partial class HassMqttService : IHostedService
 
     private Task MqttClientOnDisconnectedAsync(MqttClientDisconnectedEventArgs arg)
     {
-        _logger.LogWarning("Hass MQTT subscriber disconnected. Try reconnecting ...");
+        _logger.LogWarning("Hass MQTT subscriber disconnected");
         // signaling the reconnection
         _reconnectMqttSignal.Set();
         return Task.CompletedTask;
