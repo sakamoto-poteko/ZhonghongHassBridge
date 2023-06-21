@@ -318,7 +318,7 @@ public partial class HassMqttService : IHostedService
             }
             else
             {
-                _logger.LogError("Received update for stale unit ({Oa}, {Ia})", oa, ia);
+                _logger.LogError("Received update for stale unit ({Oa}, {Ia}), last updated on {LastUpdated}", oa, ia, val.HasValue ? val.Value.lastUpdated.ToString("O") : "N/A");
             }
         }
         else
